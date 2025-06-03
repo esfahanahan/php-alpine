@@ -1,0 +1,77 @@
+name: Build Docker Images
+on:
+  push:
+    branches: [master]
+    paths:
+      - '.github/**'
+      - 'docker/**'
+      - 'fs/**'
+  workflow_dispatch:
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      fail-fast: true
+      matrix:
+        version: ["8.2", "8.3"]
+        variant: ["mysql", "mysql-nginx", "pgsql", "pgsql-nginx"]
+    name: ${{ matrix.version }} ${{ matrix.variant }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract image description from Dockerfile
+        id: desc
+        run: |
+          DESC=$(grep -i 'org.opencontainers.image.description=' docker/${{ matrix.version }}-${{ matrix.variant }}.Dockerfile | cut -d= -f2- | sed 's/^"\(.*\)"$/\1/')
+          TITLE=$(grep -i 'org.opencontainers.image.title=' docker/${{ matrix.version }}-${{ matrix.variant }}.Dockerfile | cut -d= -f2- | sed 's/^"\(.*\)"$/\1/')
+          echo "desc=$DESC" >> $GITHUB_OUTPUT
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          labels: |
+            org.opencontainers.image.title=${{ steps.desc.outputs.title }}
+            org.opencontainers.image.description=${{ steps.desc.outputs.desc }}
+            org.opencontainers.image.vendor=Esfahan Ahan Apadana
+            org.opencontainers.image.authors=Hossein Hosni <hosni@esfahanahan.com>
+            org.opencontainers.image.source=https://github.com/esfahanahan/php-alpine
+          annotations: |
+            org.opencontainers.image.title=${{ steps.desc.outputs.title }}
+            org.opencontainers.image.description=${{ steps.desc.outputs.desc }}
+            org.opencontainers.image.vendor=Esfahan Ahan Apadana
+            org.opencontainers.image.authors=Hossein Hosni <hosni@esfahanahan.com>
+            org.opencontainers.image.source=https://github.com/esfahanahan/php-alpine
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          file: docker/${{ matrix.version }}-${{ matrix.variant }}.Dockerfile
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.version }}-${{ matrix.variant }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          cache-from: type=gha,scope=${{ env.GITHUB_REF_NAME }}-${{ matrix.version }}-${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=${{ env.GITHUB_REF_NAME }}-${{ matrix.version }}-${{ matrix.variant }}
