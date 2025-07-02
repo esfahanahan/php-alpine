@@ -69,6 +69,7 @@ RUN --mount=type=bind,source=fs,target=/mnt apk add --no-cache --virtual .build-
         pdo \
         pdo_pgsql \
         sockets \
+        soap \
         xml \
         zip && \
     pecl install memcached-3.2.0 && \
