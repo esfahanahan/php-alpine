@@ -70,8 +70,8 @@ jobs:
         with:
           file: docker/php-${{ matrix.variant }}.Dockerfile
           context: .
-          build-args:
-            PHP_VERSION: ${{ matrix.version }}
+          build-args: |
+            PHP_VERSION=${{ matrix.version }}
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.version }}-${{ matrix.variant }}
           annotations: ${{ steps.meta.outputs.annotations }}
