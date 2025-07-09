@@ -33,6 +33,8 @@ RUN --mount=type=bind,source=fs,target=/mnt apk add --no-cache --virtual .build-
         gmp-dev \
         curl-dev && \
     apk add --update --no-cache \
+        linux-headers \
+        shadow \
         libpng \
         libwebp \
         libxpm \
@@ -51,7 +53,6 @@ RUN --mount=type=bind,source=fs,target=/mnt apk add --no-cache --virtual .build-
         libxml2 \
         libzip \
         gmp \
-        linux-headers \
         bzip2 && \
     pecl install inotify && \
     pecl install redis-6.0.2 && \

@@ -34,6 +34,7 @@ RUN --mount=type=bind,source=fs,target=/mnt apk add --no-cache --virtual .build-
         curl-dev && \
     apk add --update --no-cache \
         linux-headers \
+        shadow \
         zip \
         bzip2 \
         libzip \
