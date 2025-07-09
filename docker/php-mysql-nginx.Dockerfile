@@ -1,4 +1,4 @@
-ARG PHP_VERSION
+ARG PHP_VERSION=8.3
 
 FROM php:${PHP_VERSION}-fpm-alpine3.20
 
@@ -19,7 +19,7 @@ USER root
 COPY --from=composer:2.8 /usr/bin/composer /usr/local/bin/composer
 COPY --from=qpod/supervisord:alpine /opt/supervisord/supervisord /usr/bin/supervisord
 
-RUN --mount=type=bind,source=fs,target=/mnt apk add --no-cache --virtual .build-deps $PHPIZE_DEPS  \
+RUN --mount=type=bind,source=fs,target=/mnt/fs apk add --no-cache --virtual .build-deps $PHPIZE_DEPS  \
         zlib-dev \
         bzip2-dev \
         libzip-dev \
@@ -86,13 +86,7 @@ RUN --mount=type=bind,source=fs,target=/mnt apk add --no-cache --virtual .build-
     mkdir -p /run/php /run/nginx /etc/supervisor/conf.d/ /var/log/supervisor/ && \
     ln -s /dev/stdout /var/log/nginx/access.log && \
     ln -s /dev/stderr /var/log/nginx/error.log && \
-    cp -v /mnt/usr/local/etc/php/php.ini /usr/local/etc/php/php.ini && \
-    cp -v /mnt/usr/local/etc/php/conf.d/* /usr/local/etc/php/conf.d/ && \
-    cp -v /mnt/usr/local/etc/php-fpm.d/* /usr/local/etc/php-fpm.d/ && \
-    cp -v /mnt/etc/nginx/http.d/* /etc/nginx/http.d/ && \
-    cp -Rv /mnt/etc/nginx/conf.d /etc/nginx/conf.d && \
-    cp -v /mnt/etc/supervisor/supervisord.conf /etc/supervisor/supervisord.conf && \
-    cp -v /mnt/etc/supervisor/conf.d/* /etc/supervisor/conf.d/ && \
+    cp -v -R /mnt/fs/* / && \
     touch /var/log/supervisord.log && \
     chown -R www-data:www-data /var/www/ /var/log/supervisor/ /var/log/supervisord.log && \
     cd /tmp && \

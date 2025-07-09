@@ -17,7 +17,7 @@ USER root
 COPY --from=composer:2.8 /usr/bin/composer /usr/local/bin/composer
 COPY --from=qpod/supervisord:alpine /opt/supervisord/supervisord /usr/bin/supervisord
 
-RUN --mount=type=bind,source=fs,target=/mnt apk add --no-cache --virtual .build-deps $PHPIZE_DEPS  \
+RUN --mount=type=bind,source=fs,target=/mnt/fs apk add --no-cache --virtual .build-deps $PHPIZE_DEPS  \
         zlib-dev \
         libjpeg-turbo-dev \
         libpng-dev \
@@ -83,10 +83,7 @@ RUN --mount=type=bind,source=fs,target=/mnt apk add --no-cache --virtual .build-
         redis && \
     apk del --no-network .build-deps && \
     mkdir -p /run/php /etc/supervisor/conf.d/ /var/log/supervisor/ && \
-    cp -v /mnt/usr/local/etc/php/php.ini /usr/local/etc/php/php.ini && \
-    cp -v /mnt/usr/local/etc/php/conf.d/* /usr/local/etc/php/conf.d/ && \
-    cp -v /mnt/etc/supervisor/supervisord.conf /etc/supervisor/supervisord.conf && \
-    cp -v /mnt/etc/supervisor/conf.d/10-tasker.conf /etc/supervisor/conf.d/10-tasker.conf && \
+    cp -v -R /mnt/fs/* / && \
     touch /var/log/supervisord.log && \
     chown -R www-data:www-data /var/www/ /var/log/supervisor/ /var/log/supervisord.log && \
     cd /tmp && \
