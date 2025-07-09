@@ -88,7 +88,14 @@ RUN --mount=type=bind,source=fs,target=/mnt/fs apk add --no-cache --virtual .bui
     mkdir -p /run/php /run/nginx /etc/supervisor/conf.d/ /var/log/supervisor/ && \
     ln -s /dev/stdout /var/log/nginx/access.log && \
     ln -s /dev/stderr /var/log/nginx/error.log && \
-    cp -v -R /mnt/fs/* / && \
+    cp -v /mnt/fs/usr/local/bin/* /usr/local/bin/ && \
+    cp -v /mnt/fs/usr/local/etc/php/php.ini /usr/local/etc/php/php.ini && \
+    cp -v /mnt/fs/usr/local/etc/php/conf.d/* /usr/local/etc/php/conf.d/ && \
+    cp -v /mnt/fs/usr/local/etc/php-fpm.d/* /usr/local/etc/php-fpm.d/ && \
+    cp -v /mnt/fs/etc/nginx/http.d/* /etc/nginx/http.d/ && \
+    cp -Rv /mnt/fs/etc/nginx/conf.d /etc/nginx/conf.d && \
+    cp -v /mnt/fs/etc/supervisor/supervisord.conf /etc/supervisor/supervisord.conf && \
+    cp -v /mnt/fs/etc/supervisor/conf.d/* /etc/supervisor/conf.d/ && \
     touch /var/log/supervisord.log && \
     chown -R www-data:www-data /var/www/ /var/log/supervisor/ /var/log/supervisord.log && \
     cd /tmp && \

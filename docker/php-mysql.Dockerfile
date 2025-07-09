@@ -82,7 +82,11 @@ RUN --mount=type=bind,source=fs,target=/mnt/fs apk add --no-cache --virtual .bui
         redis && \
     apk del --no-network .build-deps && \
     mkdir -p /run/php /etc/supervisor/conf.d/ /var/log/supervisor/ && \
-    cp -v -R /mnt/fs/* / && \
+    cp -v /mnt/fs/usr/local/bin/* /usr/local/bin/ && \
+    cp -v /mnt/fs/usr/local/etc/php/php.ini /usr/local/etc/php/php.ini && \
+    cp -v /mnt/fs/usr/local/etc/php/conf.d/* /usr/local/etc/php/conf.d/ && \
+    cp -v /mnt/fs/etc/supervisor/supervisord.conf /etc/supervisor/supervisord.conf && \
+    cp -v /mnt/fs/etc/supervisor/conf.d/10-tasker.conf /etc/supervisor/conf.d/10-tasker.conf && \
     touch /var/log/supervisord.log && \
     chown -R www-data:www-data /var/www/ /var/log/supervisor/ /var/log/supervisord.log && \
     cd /tmp && \
