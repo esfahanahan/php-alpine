@@ -68,8 +68,10 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          file: docker/${{ matrix.version }}-${{ matrix.variant }}.Dockerfile
+          file: docker/php-${{ matrix.variant }}.Dockerfile
           context: .
+          build-args:
+            PHP_VERSION: ${{ matrix.version }}
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.version }}-${{ matrix.variant }}
           annotations: ${{ steps.meta.outputs.annotations }}
