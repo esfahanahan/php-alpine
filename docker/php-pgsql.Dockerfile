@@ -13,8 +13,6 @@ ARG TASKER_VERSION=1.19.3
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
     PATH="/var/www/vendor/bin:$PATH"
 
-USER root
-
 COPY --from=composer:2.8 /usr/bin/composer /usr/local/bin/composer
 COPY --from=qpod/supervisord:alpine /opt/supervisord/supervisord /usr/bin/supervisord
 
@@ -98,6 +96,6 @@ RUN --mount=type=bind,source=fs,target=/mnt/fs apk add --no-cache --virtual .bui
     rm -frv tasker* && \
     echo "0 0 1 1 0 echo > /dev/null" > /etc/crontab
 
-USER www-data
+USER root
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
