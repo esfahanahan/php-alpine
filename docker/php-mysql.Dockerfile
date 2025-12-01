@@ -72,7 +72,7 @@ RUN --mount=type=bind,source=fs,target=/mnt/fs apk add --no-cache --virtual .bui
         soap \
         xml \
         zip && \
-    pecl install memcached-3.2.0 && \
+    pecl install memcached-3.4.0 && \
     docker-php-ext-enable \
         inotify \
         exif \
