@@ -53,7 +53,7 @@ RUN --mount=type=bind,source=fs,target=/mnt/fs apk add --no-cache --virtual .bui
         curl \
         nano && \
     pecl install inotify && \
-    pecl install redis-6.0.2 && \
+    pecl install redis-6.3.0 && \
     docker-php-ext-configure opcache --enable-opcache &&\
     docker-php-ext-configure gd --with-jpeg --with-webp --with-xpm --with-avif --with-freetype && \
     docker-php-ext-install \
