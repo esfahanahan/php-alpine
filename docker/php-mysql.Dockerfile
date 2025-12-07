@@ -1,5 +1,5 @@
-# values: 8.2, 8.3
-ARG PHP_VERSION=8.3
+# values: 8.2, 8.3, 8.4
+ARG PHP_VERSION=8.4
 
 FROM php:${PHP_VERSION}-cli-alpine3.20
 
@@ -54,7 +54,7 @@ RUN --mount=type=bind,source=fs,target=/mnt/fs apk add --no-cache --virtual .bui
         nano && \
     pecl install inotify && \
     pecl install redis-6.3.0 && \
-    docker-php-ext-configure opcache --enable-opcache &&\
+    docker-php-ext-configure opcache --enable-opcache && \
     docker-php-ext-configure gd --with-jpeg --with-webp --with-xpm --with-avif --with-freetype && \
     docker-php-ext-install \
         bcmath \

@@ -17,7 +17,7 @@ jobs:
       max-parallel: 4
       fail-fast: true
       matrix:
-        version: ["8.2", "8.3"]
+        version: ["8.2", "8.3", "8.4"]
         variant: ["mysql", "mysql-nginx", "pgsql", "pgsql-nginx"]
     name: ${{ matrix.version }} ${{ matrix.variant }}
     permissions:
