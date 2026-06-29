@@ -15,7 +15,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1 \
 
 EXPOSE 80
 
-COPY --from=composer:2.8 /usr/bin/composer /usr/local/bin/composer
+COPY --from=composer:2.10 /usr/bin/composer /usr/local/bin/composer
 COPY --from=qpod/supervisord:alpine /opt/supervisord/supervisord /usr/bin/supervisord
 
 RUN --mount=type=bind,source=fs,target=/mnt/fs apk add --no-cache --virtual .build-deps $PHPIZE_DEPS  \
