@@ -9,14 +9,28 @@ LABEL org.opencontainers.image.description="PHP ${PHP_VERSION} with MySQL, Compo
 WORKDIR /var/www
 
 ARG TASKER_VERSION=1.19.3
+ARG COMPOSER_VERSION=2.10.1
 
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
     PATH="/var/www/vendor/bin:$PATH"
 
-COPY --from=composer:2.10 /usr/bin/composer /usr/local/bin/composer
 COPY --from=qpod/supervisord:alpine /opt/supervisord/supervisord /usr/bin/supervisord
 
-RUN --mount=type=bind,source=fs,target=/mnt/fs apk add --no-cache --virtual .build-deps $PHPIZE_DEPS  \
+RUN --mount=type=bind,source=fs,target=/mnt/fs \
+    curl \
+        --silent \
+        --fail \
+        --location \
+        --retry 3 \
+        --output /tmp/installer.php \
+        --url https://raw.githubusercontent.com/composer/getcomposer.org/f24b8f860b95b52167f91bbd3e3a7bcafe043038/web/installer && \
+    php /tmp/installer.php \
+        --no-ansi \
+        --install-dir=/usr/bin \
+        --filename=composer \
+        --version=${COMPOSER_VERSION} && \
+    rm -rf /tmp/installer.php && \
+    apk add --no-cache --virtual .build-deps $PHPIZE_DEPS  \
         zlib-dev \
         bzip2-dev \
         libzip-dev \
@@ -93,7 +107,5 @@ RUN --mount=type=bind,source=fs,target=/mnt/fs apk add --no-cache --virtual .bui
     mv tasker_*/tasker /usr/local/bin/tasker && \
     rm -frv tasker* && \
     echo "0 0 1 1 0 echo > /dev/null" > /etc/crontab
-
-USER root
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
