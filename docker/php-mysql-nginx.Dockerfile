@@ -9,7 +9,7 @@ LABEL org.opencontainers.image.description="PHP ${PHP_VERSION} with MySQL, Nginx
 WORKDIR /var/www
 
 ARG TASKER_VERSION=1.19.3
-ARG COMPOSER_VERSION=2.10.1
+ARG COMPOSER_VERSION=2.10.2
 
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
     PATH="/var/www/vendor/bin:$PATH"
