@@ -69,7 +69,6 @@ RUN --mount=type=bind,source=fs,target=/mnt/fs \
         shadow \
         zip && \
     pecl install redis-6.3.0 && \
-    docker-php-ext-configure opcache --enable-opcache && \
     docker-php-ext-configure gd --with-avif --with-freetype --with-jpeg --with-webp --with-xpm && \
     docker-php-ext-configure pgsql --with-pgsql=/usr && \
     docker-php-ext-install \
