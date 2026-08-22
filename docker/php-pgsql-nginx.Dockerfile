@@ -76,13 +76,10 @@ RUN --mount=type=bind,source=fs,target=/mnt/fs \
         exif \
         gd \
         intl \
-        opcache \
         pcntl \
-        pdo \
         pdo_pgsql \
         soap \
         sockets \
-        xml \
         zip && \
     docker-php-ext-enable redis && \
     apk del --no-network .build-deps && \
