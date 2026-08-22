@@ -4,7 +4,7 @@ ARG PHP_VERSION=8.5
 FROM php:${PHP_VERSION}-cli-alpine3.24
 
 LABEL org.opencontainers.image.title="PHP ${PHP_VERSION} with MySQL, Composer, Tasker, and Supervisor"
-LABEL org.opencontainers.image.description="PHP ${PHP_VERSION} with MySQL, Composer, Tasker, and Supervisor including extensions: (bcmath, bz2, exif, gd, gmp, intl, mysqli, opcache, pcntl, pdo, pdo_mysql, sockets, xml, zip, inotify, exif, memcached, redis) based on php:${PHP_VERSION}-cli-alpine3.20"
+LABEL org.opencontainers.image.description="PHP ${PHP_VERSION} with MySQL, Composer, Tasker, and Supervisor including extensions: (bcmath, exif, gd, intl, opcache, pcntl, pdo, pdo_mysql, redis, soap, sockets, xml, zip) based on php:${PHP_VERSION}-cli-alpine3.24"
 
 WORKDIR /var/www
 
@@ -30,68 +30,56 @@ RUN --mount=type=bind,source=fs,target=/mnt/fs \
         --filename=composer \
         --version=${COMPOSER_VERSION} && \
     rm -rf /tmp/installer.php && \
-    apk add --no-cache --virtual .build-deps $PHPIZE_DEPS  \
-        zlib-dev \
-        bzip2-dev \
-        libzip-dev \
+    apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+        curl-dev \
+        freetype-dev \
+        icu-dev \
+        libavif-dev \
         libjpeg-turbo-dev \
         libpng-dev \
         libwebp-dev \
-        libxpm-dev \
-        libavif-dev \
         libxml2-dev \
-        freetype-dev \
-        gmp-dev \
-        libmemcached-dev \
-        openssl-dev \
-        curl-dev && \
-    apk add --update --no-cache \
+        libxpm-dev \
+        libzip-dev \
         linux-headers \
-        shadow \
-        zip \
-        bzip2 \
-        libzip \
+        openssl-dev \
+        zlib-dev && \
+    apk add --update --no-cache \
+        curl \
+        freetype \
+        icu-data-full \
+        icu-libs \
         jpegoptim \
-        optipng \
-        pngquant \
+        libavif \
+        libjpeg-turbo \
         libpng \
         libwebp \
-        libxpm \
-        libavif \
         libxml2 \
-        icu-dev \
-        freetype \
-        gmp \
-        libmemcached \
+        libxpm \
+        libzip \
         mysql-client \
-        curl \
-        nano && \
-    pecl install inotify && \
+        nano \
+        optipng \
+        pngquant \
+        shadow \
+        zip && \
     pecl install redis-6.3.0 && \
-    docker-php-ext-configure opcache --enable-opcache && \
-    docker-php-ext-configure gd --with-jpeg --with-webp --with-xpm --with-avif --with-freetype && \
+    docker-php-ext-configure opcache && \
+    docker-php-ext-configure gd --with-avif --with-freetype --with-jpeg --with-webp --with-xpm && \
     docker-php-ext-install \
         bcmath \
-        bz2 \
         exif \
         gd \
-        gmp \
         intl \
-        mysqli \
         opcache \
         pcntl \
         pdo \
         pdo_mysql \
-        sockets \
         soap \
+        sockets \
         xml \
         zip && \
-    pecl install memcached-3.4.0 && \
-    docker-php-ext-enable \
-        inotify \
-        exif \
-        memcached \
-        redis && \
+    docker-php-ext-enable redis && \
     apk del --no-network .build-deps && \
     mkdir -p /run/php /etc/supervisor/conf.d/ /var/log/supervisor/ && \
     cp -v /mnt/fs/usr/local/bin/* /usr/local/bin/ && \

@@ -15,13 +15,13 @@ PHP running on alpine base Docker Image with or without Nginx 🐳
 ## Pull it from Github Registry
 To pull the docker image:
 ```bash
-docker pull ghcr.io/esfahanahan/php-alpine:8.3-mysql-nginx
+docker pull ghcr.io/esfahanahan/php-alpine:8.5-mysql-nginx
 ```
 
 ## Usage
 To run from current dir
 ```bash
-docker run -v $(pwd):/var/www/html -p 80:80 ghcr.io/esfahanahan/php-alpine:8.3-mysql-nginx
+docker run -v $(pwd):/var/www/html -p 80:80 ghcr.io/esfahanahan/php-alpine:8.5-mysql-nginx
 ```
 
 ## What's Included
@@ -34,17 +34,15 @@ docker run -v $(pwd):/var/www/html -p 80:80 ghcr.io/esfahanahan/php-alpine:8.3-m
 
 ## PHP Extension
 - bcmath
-- bz2
 - exif
 - gd
-- gmp
 - intl
-- mysqli
 - opcache
 - pcntl
-- mysqli or pgsql
 - pdo
 - pdo_mysql or pdo_pgsql
+- redis
+- soap
 - sockets
 - xml
 - zip
@@ -53,13 +51,13 @@ docker run -v $(pwd):/var/www/html -p 80:80 ghcr.io/esfahanahan/php-alpine:8.3-m
 ## Adding other PHP Extension
 You can add additional PHP Extensions by running `docker-ext-install` command. Don't forget to install necessary dependencies for required extension.
 ```bash
-FROM ghcr.io/esfahanahan/php-alpine:8.3-mysql-nginx
+FROM ghcr.io/esfahanahan/php-alpine:8.5-mysql-nginx
 RUN docker-php-ext-install xdebug
 ```
 
 ## Adding a cronjob
 ```bash
-FROM ghcr.io/esfahanahan/php-alpine:8.3-mysql-nginx
+FROM ghcr.io/esfahanahan/php-alpine:8.5-mysql-nginx
 echo '0 * * * * /usr/local/bin/php  /var/www/artisan schedule:run >> /dev/null 2>&1' >> /etc/crontab
 ```
  
