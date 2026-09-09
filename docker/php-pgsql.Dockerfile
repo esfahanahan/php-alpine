@@ -14,8 +14,6 @@ ARG COMPOSER_VERSION=2.10.3
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
     PATH="/var/www/vendor/bin:$PATH"
 
-COPY --from=qpod/supervisord:alpine /opt/supervisord/supervisord /usr/bin/supervisord
-
 RUN --mount=type=bind,source=fs,target=/mnt/fs \
     curl \
         --silent \
@@ -64,6 +62,7 @@ RUN --mount=type=bind,source=fs,target=/mnt/fs \
         postgresql-client \
         postgresql-libs \
         shadow \
+        supervisor \
         zip && \
     pecl install redis-6.3.0 && \
     docker-php-ext-configure gd --with-avif --with-freetype --with-jpeg --with-webp --with-xpm && \
