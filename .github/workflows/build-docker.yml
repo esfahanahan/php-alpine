@@ -1,7 +1,7 @@
 name: Build Docker Images
 on:
   schedule:
-    # Rebuild so minor tags follow the PHP patch currently published on Docker Hub.
+    # Rebuild the pinned security releases. The job fails if Docker Hub serves a different patch.
     - cron: "0 2 * * *"
   push:
     branches: [master]
@@ -25,9 +25,17 @@ jobs:
       max-parallel: 4
       fail-fast: true
       matrix:
-        version: ["8.2", "8.3", "8.4", "8.5"]
+        php:
+          - version: "8.2"
+            patch: "8.2.35"
+          - version: "8.3"
+            patch: "8.3.36"
+          - version: "8.4"
+            patch: "8.4.27"
+          - version: "8.5"
+            patch: "8.5.12"
         variant: ["mysql", "mysql-nginx", "pgsql", "pgsql-nginx"]
-    name: ${{ matrix.version }} ${{ matrix.variant }}
+    name: ${{ matrix.php.patch }} ${{ matrix.variant }}
     permissions:
       contents: read
       packages: write
@@ -49,30 +57,29 @@ jobs:
       - name: Resolve PHP patch version
         id: php
         env:
-          PHP_MINOR: ${{ matrix.version }}
+          PHP_MINOR: ${{ matrix.php.version }}
+          PHP_PATCH: ${{ matrix.php.patch }}
           VARIANT: ${{ matrix.variant }}
         run: |
           case "$VARIANT" in
             *-nginx) flavor=fpm ;;
             *) flavor=cli ;;
           esac
-          base="php:${PHP_MINOR}-${flavor}-alpine3.24"
+          base="php:${PHP_PATCH}-${flavor}-alpine3.24"
           docker pull --platform linux/amd64 "$base"
-          patch="$(docker run --rm --platform linux/amd64 "$base" php -r 'echo PHP_VERSION;')"
-          if [ -z "$patch" ]; then
-            echo "Failed to resolve PHP version from ${base}"
+          actual="$(docker run --rm --platform linux/amd64 "$base" php -r 'echo PHP_VERSION;')"
+          if [ "$actual" != "$PHP_PATCH" ]; then
+            echo "Expected PHP ${PHP_PATCH} from ${base}, got '${actual}'"
             exit 1
           fi
-          echo "patch=${patch}" >> "$GITHUB_OUTPUT"
+          echo "patch=${actual}" >> "$GITHUB_OUTPUT"
           {
             echo "tags<<EOF"
             echo "${REGISTRY}/${IMAGE_NAME}:${PHP_MINOR}-${VARIANT}"
-            if [ "$patch" != "$PHP_MINOR" ]; then
-              echo "${REGISTRY}/${IMAGE_NAME}:${patch}-${VARIANT}"
-            fi
+            echo "${REGISTRY}/${IMAGE_NAME}:${actual}-${VARIANT}"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
-          echo "Resolved ${base} to ${patch}"
+          echo "Using ${base} (${actual}); also tagging ${PHP_MINOR}-${VARIANT}"
 
       - name: Extract image description from Dockerfile
         id: desc
@@ -116,9 +123,9 @@ jobs:
           file: docker/php-${{ matrix.variant }}.Dockerfile
           context: .
           build-args: |
-            PHP_VERSION=${{ matrix.version }}
+            PHP_VERSION=${{ matrix.php.patch }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.php.outputs.tags }}
           annotations: ${{ steps.meta.outputs.annotations }}
-          cache-from: type=gha,scope=${{ env.GITHUB_REF_NAME }}-${{ matrix.version }}-${{ matrix.variant }}
-          cache-to: type=gha,mode=max,scope=${{ env.GITHUB_REF_NAME }}-${{ matrix.version }}-${{ matrix.variant }}
+          cache-from: type=gha,scope=${{ env.GITHUB_REF_NAME }}-${{ matrix.php.patch }}-${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=${{ env.GITHUB_REF_NAME }}-${{ matrix.php.patch }}-${{ matrix.variant }}
