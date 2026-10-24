@@ -13,10 +13,24 @@ PHP running on alpine base Docker Image with or without Nginx 🐳
 
 
 ## Pull it from Github Registry
-To pull the docker image:
+`php-alpine` is the image name. It does not include the Alpine release, so that release is a suffix on the tag, the same place the official PHP image puts it (`8.5.12-cli-alpine3.24`).
+
+One build is pushed to four tags. `8.5-mysql-nginx` and `8.5.12-mysql-nginx` are the same image: the minor tag follows the newest patch, and the patch tag is the one to pin when a deploy must include a specific PHP security release. Variants are `mysql`, `mysql-nginx`, `pgsql`, and `pgsql-nginx`.
+
+| Tag | Example | When it moves |
+| --- | --- | --- |
+| `<minor>-<variant>` | `8.5-mysql-nginx` | Next PHP patch, or the next Alpine version in the build matrix |
+| `<patch>-<variant>` | `8.5.12-mysql-nginx` | Rebuilds of this PHP patch. Stops moving once the workflow pin leaves 8.5.12 |
+| `<minor>-<variant>-alpine<version>` | `8.5-mysql-nginx-alpine3.24` | Next PHP patch, while this Alpine release is still the one being built |
+| `<patch>-<variant>-alpine<version>` | `8.5.12-mysql-nginx-alpine3.24` | Same rebuilds. The name stays on Alpine 3.24 after a later Alpine bump |
+
 ```bash
 docker pull ghcr.io/esfahanahan/php-alpine:8.5-mysql-nginx
+docker pull ghcr.io/esfahanahan/php-alpine:8.5.12-mysql-nginx
+docker pull ghcr.io/esfahanahan/php-alpine:8.5.12-mysql-nginx-alpine3.24
 ```
+
+PHP lines currently built, including the fixes for CVE-2026-109618 and CVE-2026-109619: `8.2.35`, `8.3.36`, `8.4.27`, `8.5.12` on Alpine 3.24. There is no `latest` tag. Pin a digest when a deploy must not change on rebuild.
 
 ## Usage
 To run from current dir
@@ -75,7 +89,7 @@ redirect_stderr=true
 ```
 On your Docker image
 ```bash
-FROM ghcr.io/esfahanahan/php-alpine:latest
+FROM ghcr.io/esfahanahan/php-alpine:8.5-mysql-nginx
 ADD my-websocket-app.ini /etc/supervisor.d/
 ```
 For more details please refrer to [QPod/supervisord](https://github.com/QPod/supervisord/blob/main/doc/doc-config.md) documentions.

@@ -1,12 +1,25 @@
 name: Build Docker Images
 on:
+  schedule:
+    # Rebuild the pinned security releases.
+    - cron: "0 2 * * *"
   push:
     branches: [master]
     paths:
       - '.github/**'
       - 'docker/**'
       - 'fs/**'
+      - 'docker-bake.hcl'
+  pull_request:
+    paths:
+      - '.github/**'
+      - 'docker/**'
+      - 'fs/**'
+      - 'docker-bake.hcl'
   workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -17,9 +30,36 @@ jobs:
       max-parallel: 4
       fail-fast: true
       matrix:
-        version: ["8.2", "8.3", "8.4", "8.5"]
-        variant: ["mysql", "mysql-nginx", "pgsql", "pgsql-nginx"]
-    name: ${{ matrix.version }} ${{ matrix.variant }}
+        # One Alpine release. Every entry pushes the short tags, so a second
+        # entry would publish 8.5-mysql-nginx twice.
+        alpine: ["3.24"]
+        php:
+          - version: "8.5"
+            patch: "8.5.12"
+          - version: "8.4"
+            patch: "8.4.27"
+          - version: "8.3"
+            patch: "8.3.36"
+          - version: "8.2"
+            patch: "8.2.35"
+        variant:
+          - name: mysql
+            flavor: cli
+            stack: MySQL, Composer, Tasker, and Supervisor
+            extensions: bcmath, exif, gd, intl, opcache, pcntl, pdo, pdo_mysql, redis, soap, sockets, xml, zip
+          - name: mysql-nginx
+            flavor: fpm
+            stack: MySQL, Nginx, Composer, Tasker, and Supervisor
+            extensions: bcmath, exif, gd, intl, opcache, pcntl, pdo, pdo_mysql, redis, soap, sockets, xml, zip
+          - name: pgsql
+            flavor: cli
+            stack: PostgreSQL, Composer, Tasker, and Supervisor
+            extensions: bcmath, exif, gd, intl, opcache, pcntl, pdo, pdo_pgsql, redis, soap, sockets, xml, zip
+          - name: pgsql-nginx
+            flavor: fpm
+            stack: PostgreSQL, Nginx, Composer, Tasker, and Supervisor
+            extensions: bcmath, exif, gd, intl, opcache, pcntl, pdo, pdo_pgsql, redis, soap, sockets, xml, zip
+    name: ${{ matrix.php.patch }} alpine${{ matrix.alpine }} ${{ matrix.variant.name }}
     permissions:
       contents: read
       packages: write
@@ -28,52 +68,61 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
-
-      - name: Extract image description from Dockerfile
-        id: desc
-        run: |
-          DESC=$(grep -i 'org.opencontainers.image.description=' docker/${{ matrix.version }}-${{ matrix.variant }}.Dockerfile | cut -d= -f2- | sed 's/^"\(.*\)"$/\1/')
-          TITLE=$(grep -i 'org.opencontainers.image.title=' docker/${{ matrix.version }}-${{ matrix.variant }}.Dockerfile | cut -d= -f2- | sed 's/^"\(.*\)"$/\1/')
-          echo "desc=$DESC" >> $GITHUB_OUTPUT
-          echo "title=$TITLE" >> $GITHUB_OUTPUT
 
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
+          tags: |
+            type=raw,value=${{ matrix.php.version }}-${{ matrix.variant.name }}
+            type=raw,value=${{ matrix.php.patch }}-${{ matrix.variant.name }}
+            type=raw,value=${{ matrix.php.version }}-${{ matrix.variant.name }}-alpine${{ matrix.alpine }}
+            type=raw,value=${{ matrix.php.patch }}-${{ matrix.variant.name }}-alpine${{ matrix.alpine }}
           labels: |
-            org.opencontainers.image.title=${{ steps.desc.outputs.title }}
-            org.opencontainers.image.description=${{ steps.desc.outputs.desc }}
+            org.opencontainers.image.title=PHP ${{ matrix.php.patch }} with ${{ matrix.variant.stack }}
+            org.opencontainers.image.description=PHP ${{ matrix.php.patch }} with ${{ matrix.variant.stack }} including extensions: (${{ matrix.variant.extensions }}) based on php:${{ matrix.php.patch }}-${{ matrix.variant.flavor }}-alpine${{ matrix.alpine }}
             org.opencontainers.image.vendor=Esfahan Ahan Apadana
             org.opencontainers.image.authors=Hossein Hosni <hosni@esfahanahan.com>
-            org.opencontainers.image.source=https://github.com/esfahanahan/php-alpine
+            org.opencontainers.image.version=${{ matrix.php.patch }}
+            org.opencontainers.image.base.name=php:${{ matrix.php.patch }}-${{ matrix.variant.flavor }}-alpine${{ matrix.alpine }}
           annotations: |
-            org.opencontainers.image.title=${{ steps.desc.outputs.title }}
-            org.opencontainers.image.description=${{ steps.desc.outputs.desc }}
+            org.opencontainers.image.title=PHP ${{ matrix.php.patch }} with ${{ matrix.variant.stack }}
+            org.opencontainers.image.description=PHP ${{ matrix.php.patch }} with ${{ matrix.variant.stack }} including extensions: (${{ matrix.variant.extensions }}) based on php:${{ matrix.php.patch }}-${{ matrix.variant.flavor }}-alpine${{ matrix.alpine }}
             org.opencontainers.image.vendor=Esfahan Ahan Apadana
             org.opencontainers.image.authors=Hossein Hosni <hosni@esfahanahan.com>
-            org.opencontainers.image.source=https://github.com/esfahanahan/php-alpine
+            org.opencontainers.image.version=${{ matrix.php.patch }}
+            org.opencontainers.image.base.name=php:${{ matrix.php.patch }}-${{ matrix.variant.flavor }}-alpine${{ matrix.alpine }}
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v7
+      - name: Build and push
+        uses: docker/bake-action@v7
         with:
-          file: docker/php-${{ matrix.variant }}.Dockerfile
-          context: .
-          build-args: |
-            PHP_VERSION=${{ matrix.version }}
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.version }}-${{ matrix.variant }}
-          annotations: ${{ steps.meta.outputs.annotations }}
-          cache-from: type=gha,scope=${{ env.GITHUB_REF_NAME }}-${{ matrix.version }}-${{ matrix.variant }}
-          cache-to: type=gha,mode=max,scope=${{ env.GITHUB_REF_NAME }}-${{ matrix.version }}-${{ matrix.variant }}
+          source: .
+          files: |
+            ./docker-bake.hcl
+            cwd://${{ steps.meta.outputs.bake-file }}
+            cwd://${{ steps.meta.outputs.bake-file-annotations }}
+          targets: ${{ matrix.variant.name }}
+          push: ${{ github.event_name != 'pull_request' }}
+          pull: true
+          provenance: mode=max
+          sbom: true
+          vars: |
+            PHP_VERSION=${{ matrix.php.patch }}
+            ALPINE_VERSION=${{ matrix.alpine }}
+          set: |
+            *.cache-from=type=gha,scope=${{ github.ref_name }}-${{ matrix.php.patch }}-alpine${{ matrix.alpine }}-${{ matrix.variant.name }}
+            *.cache-to=type=gha,mode=max,scope=${{ github.ref_name }}-${{ matrix.php.patch }}-alpine${{ matrix.alpine }}-${{ matrix.variant.name }}
