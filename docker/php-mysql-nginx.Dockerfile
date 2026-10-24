@@ -1,10 +1,14 @@
-# values: 8.2, 8.3, 8.4, 8.5
+# PHP_VERSION: 8.2, 8.3, 8.4, 8.5 or a patch release
 ARG PHP_VERSION=8.5
+ARG ALPINE_VERSION=3.24
 
-FROM php:${PHP_VERSION}-fpm-alpine3.24
+FROM php:${PHP_VERSION}-fpm-alpine${ALPINE_VERSION}
+
+ARG PHP_VERSION
+ARG ALPINE_VERSION
 
 LABEL org.opencontainers.image.title="PHP ${PHP_VERSION} with MySQL, Nginx, Composer, Tasker, and Supervisor"
-LABEL org.opencontainers.image.description="PHP ${PHP_VERSION} with MySQL, Nginx, Composer, Tasker, and Supervisor including extensions: (bcmath, exif, gd, intl, opcache, pcntl, pdo, pdo_mysql, redis, soap, sockets, xml, zip) based on php:${PHP_VERSION}-fpm-alpine3.24"
+LABEL org.opencontainers.image.description="PHP ${PHP_VERSION} with MySQL, Nginx, Composer, Tasker, and Supervisor including extensions: (bcmath, exif, gd, intl, opcache, pcntl, pdo, pdo_mysql, redis, soap, sockets, xml, zip) based on php:${PHP_VERSION}-fpm-alpine${ALPINE_VERSION}"
 
 WORKDIR /var/www
 
