@@ -13,7 +13,7 @@ LABEL org.opencontainers.image.description="PHP ${PHP_VERSION} with PostgreSQL, 
 WORKDIR /var/www
 
 ARG TASKER_VERSION=1.20.3
-ARG COMPOSER_VERSION=2.10.3
+ARG COMPOSER_VERSION=2.11.1
 
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
     PATH="/var/www/vendor/bin:$PATH"

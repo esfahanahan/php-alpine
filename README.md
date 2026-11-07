@@ -39,7 +39,7 @@ docker run -v $(pwd):/var/www/html -p 80:80 ghcr.io/esfahanahan/php-alpine:8.5-m
 ```
 
 ## What's Included
- - [Composer](https://getcomposer.org/) ( v2 - updated )
+ - [Composer](https://getcomposer.org/) ( v2.11.1 )
  - [Tasker](https://github.com/adhocore/gronx) instead of CRON
  - [Go-Supervisor](https://github.com/QPod/supervisord) 
 
