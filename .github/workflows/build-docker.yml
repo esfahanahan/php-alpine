@@ -37,13 +37,13 @@ jobs:
         alpine: ["3.24"]
         php:
           - version: "8.5"
-            patch: "8.5.12"
+            patch: "8.5.13"
           - version: "8.4"
-            patch: "8.4.27"
+            patch: "8.4.28"
           - version: "8.3"
-            patch: "8.3.36"
+            patch: "8.3.37"
           - version: "8.2"
-            patch: "8.2.35"
+            patch: "8.2.36"
         variant:
           - name: mysql
             flavor: cli
